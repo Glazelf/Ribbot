@@ -24,10 +24,9 @@ namespace SysBot.AnimalCrossing
         {
             // Disconnect our virtual controller; will reconnect once we send a button command after a request.
             LogUtil.LogInfo("Detatching controller on startup as first interaction.", Config.IP);
-            //await Connection.SendAsync(SwitchCommand.DetachController(), token);
+            await Connection.SendAsync(SwitchCommand.DetachController(), token);
             await Task.Delay(0_200, token).ConfigureAwait(false);
 
-            /*
             // Validate inventory offset.
             LogUtil.LogInfo("Checking inventory offset for validity.", Config.IP);
             var (ofs, len) = InventoryValidator.GetOffsetLength(Config.InventoryOffset);
@@ -39,7 +38,6 @@ namespace SysBot.AnimalCrossing
                 LogUtil.LogInfo($"Inventory read from {Config.InventoryOffset} does not appear to be valid. Exiting!", Config.IP);
                 return;
             }
-            */
             
             // Check if AllowTeleporation is enabled in config.
             if (Config.AllowTeleporation)
@@ -68,8 +66,6 @@ namespace SysBot.AnimalCrossing
                 LogUtil.LogInfo("Returning to starting position.", Config.IP);
                 await ResetPosition(token).ConfigureAwait(false);
             }
-
-            return;
 
             LogUtil.LogInfo("Successfully connected to bot. Starting main loop!", Config.IP);
             int dropCount = 0;
@@ -283,6 +279,7 @@ namespace SysBot.AnimalCrossing
 
         private async Task<bool> IsOverworld(CancellationToken token)
         {
+            // Checks if player is in overworld (outside of a building).
             var x = BitConverter.ToUInt32(await Connection.ReadBytesAbsoluteAsync(CoordinateAddress + 0x1E, 0x4, token).ConfigureAwait(false), 0);
             return x == 0xC0066666;
         }
