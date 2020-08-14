@@ -120,6 +120,32 @@ namespace SysBot.AnimalCrossing
                     await Click(SwitchButton.B, 0_400, token).ConfigureAwait(false);
             }
 
+            // Check if online session for game has ended.
+            if (!await CheckSessionActive(token).ConfigureAwait(false))
+            {
+                LogUtil.LogInfo("Online session for your island was interrupted.", Config.IP);
+
+                // Check if DodoCodeRetrieval is enabled in config.
+                if (!Config.DodoCodeRetrieval)
+                {
+                    LogUtil.LogInfo("DodoCodeRetrieval and AllowTeleporation must be enabled to automatically retrieve new Dodo code. Exiting!", Config.IP);
+                    return;
+                }
+                else if (!Config.AllowTeleporation)
+                {
+                    LogUtil.LogInfo("AllowTeleporation has to be enabled to automatically retrieve new Dodo code. Exiting!", Config.IP);
+                    return;
+                }
+
+                // Open gates and retrieve Dodo code in airport.
+                LogUtil.LogInfo("Opening gates and obtaining Dodo code.", Config.IP);
+                await GetDodoCode(token).ConfigureAwait(false);
+
+                // Reset player position to initial position.
+                LogUtil.LogInfo("Returning to starting position.", Config.IP);
+                await ResetPosition(token).ConfigureAwait(false);
+            }
+
             var itemName = GameInfo.Strings.GetItemName(item);
             LogUtil.LogInfo($"Injecting Item: {item.DisplayItemId:X4} ({itemName}).", Config.IP);
 
@@ -282,6 +308,13 @@ namespace SysBot.AnimalCrossing
             // Checks if player is in overworld (outside of a building).
             var x = BitConverter.ToUInt32(await Connection.ReadBytesAbsoluteAsync(CoordinateAddress + 0x1E, 0x4, token).ConfigureAwait(false), 0);
             return x == 0xC0066666;
+        }
+
+        private async Task<bool> CheckSessionActive(CancellationToken token)
+        {
+            // Checks if the session is still active and gates are still open. (Can close due to a player disconnecting while flying to your island.)
+            var x = await Connection.ReadBytesAsync(0x91DD740, 0x1, token).ConfigureAwait(false);
+            return x[0] == 1;
         }
     }
 }
