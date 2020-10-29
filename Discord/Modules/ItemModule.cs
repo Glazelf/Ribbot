@@ -103,6 +103,11 @@ namespace SysBot.AnimalCrossing
 
         [Command("customize")]
         [Summary("Customizes an item and prints the hex code.")]
+        public async Task CustomizeAsync([Summary("Item ID (in hex)")] string itemHex, [Summary("First customization value")] int cust1, [Summary("Second customization value")] int cust2)
+            => await CustomizeAsync(itemHex, cust1 + cust2).ConfigureAwait(false);
+
+        [Command("customize")]
+        [Summary("Customizes an item and prints the hex code.")]
         public async Task CustomizeAsync([Summary("Item ID (in hex)")]string itemHex, [Summary("Customization value sum")]int sum)
         {
             ushort itemID = ItemUtil.GetID(itemHex);
@@ -133,8 +138,9 @@ namespace SysBot.AnimalCrossing
             }
 
             var info = ItemRemakeInfoData.List[remake];
-            bool hasBody = body == 0 || (body <= 7 && body <= info.ReBodyPatternNum);
-            bool hasFabric = fabric == 0 || (fabric <= 7 && info.GetFabricDescription(fabric) != "Invalid");
+            // already checked out-of-range body/fabric values above
+            bool hasBody = body == 0 || body <= info.ReBodyPatternNum;
+            bool hasFabric = fabric == 0 || info.GetFabricDescription(fabric) != "Invalid";
 
             if (!hasBody || !hasFabric)
                 await ReplyAsync("Requested customization for item appears to be invalid.").ConfigureAwait(false);
