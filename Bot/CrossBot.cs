@@ -97,32 +97,6 @@ namespace SysBot.AnimalCrossing
                     await Click(SwitchButton.B, 0_400, token).ConfigureAwait(false);
             }
 
-            // Check if online session for game has ended.
-            if (!await CheckSessionActive(token).ConfigureAwait(false))
-            {
-                LogUtil.LogInfo("Online session for your island was interrupted.", Config.IP);
-
-                // Check if DodoCodeRetrieval is enabled in config.
-                if (!Config.DodoCodeRetrieval)
-                {
-                    LogUtil.LogInfo("DodoCodeRetrieval and AllowTeleporation must be enabled to automatically retrieve new Dodo code. Exiting!", Config.IP);
-                    return;
-                }
-                else if (!Config.AllowTeleporation)
-                {
-                    LogUtil.LogInfo("AllowTeleporation has to be enabled to automatically retrieve new Dodo code. Exiting!", Config.IP);
-                    return;
-                }
-
-                // Open gates and retrieve Dodo code in airport.
-                LogUtil.LogInfo("Opening gates and obtaining Dodo code.", Config.IP);
-                await GetDodoCode(token).ConfigureAwait(false);
-
-                // Reset player position to initial position.
-                LogUtil.LogInfo("Returning to starting position.", Config.IP);
-                await ResetPosition(token).ConfigureAwait(false);
-            }
-
             var itemName = GameInfo.Strings.GetItemName(item);
             LogUtil.LogInfo($"Injecting Item: {item.DisplayItemId:X4} ({itemName}).", Config.IP);
 
