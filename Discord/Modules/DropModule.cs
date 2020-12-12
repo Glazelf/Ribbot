@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Discord.Commands;
@@ -32,23 +31,32 @@ namespace SysBot.AnimalCrossing
             await ReplyAsync($"Dodo Code: {Globals.Bot.DodoCode}.").ConfigureAwait(false);
         }
 
+        private const string DropItemSummary =
+            "Requests the bot drop an item with the user's provided input. " +
+            "Hex Mode: Item IDs (in hex); request multiple by putting spaces between items. " +
+            "Text Mode: Item names; request multiple by putting commas between items. To parse for another language, include the language code first and a comma, followed by the items.";
+
         [Command("dropItem")]
         [Alias("drop")]
         [Summary("Drops a custom item (or items).")]
-        public async Task RequestDropAsync([Summary("Item ID (in hex). To request multiple, use spaces between item requests.")][Remainder]string request)
+        public async Task RequestDropAsync([Summary(DropItemSummary)][Remainder]string request)
         {
-            var split = request.Split(new[] { " ", "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
-            var items = DropUtil.GetItems(split, Globals.Bot.Config);
+            var cfg = Globals.Bot.Config;
+            var items = DropUtil.GetItemsFromUserInput(request, cfg.DropConfig);
             await DropItems(items).ConfigureAwait(false);
         }
+
+        private const string DropDIYSummary =
+            "Requests the bot drop a DIY recipe with the user's provided input. " +
+            "Hex Mode: DIY Recipe IDs (in hex); request multiple by putting spaces between items. " +
+            "Text Mode: DIY Recipe Item names; request multiple by putting commas between items. To parse for another language, include the language code first and a comma, followed by the items.";
 
         [Command("dropDIY")]
         [Alias("diy")]
         [Summary("Drops a DIY recipe with the requested recipe ID(s).")]
-        public async Task RequestDropDIYAsync([Summary("DIY recipe ID (in hex). To request multiple, use spaces between item requests.")][Remainder]string recipeIDs)
+        public async Task RequestDropDIYAsync([Summary(DropDIYSummary)][Remainder]string recipeIDs)
         {
-            var split = recipeIDs.Split(new[] { " ", "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
-            var items = DropUtil.GetDIYItems(split);
+            var items = DropUtil.GetDIYsFromUserInput(recipeIDs);
             await DropItems(items).ConfigureAwait(false);
         }
 
