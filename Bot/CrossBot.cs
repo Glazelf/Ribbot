@@ -29,6 +29,7 @@ namespace SysBot.AnimalCrossing
             await Connection.SendAsync(SwitchCommand.DetachController(), token).ConfigureAwait(false);
             await Task.Delay(200, token).ConfigureAwait(false);
 
+            /*
             // Validate inventory offset.
             LogUtil.LogInfo("Checking inventory offset for validity.", Config.IP);
             var valid = await GetIsPlayerInventoryValid(Config.Offset, token).ConfigureAwait(false);
@@ -41,6 +42,7 @@ namespace SysBot.AnimalCrossing
                     return;
                 }
             }
+            */
             
             // Check if AllowTeleporation is enabled in config.
             if (Config.AllowTeleporation)
@@ -69,6 +71,8 @@ namespace SysBot.AnimalCrossing
                 LogUtil.LogInfo("Returning to starting position.", Config.IP);
                 await ResetPosition(token).ConfigureAwait(false);
             }
+
+            return;
 
             LogUtil.LogInfo("Successfully connected to bot. Starting main loop!", Config.IP);
             while (!token.IsCancellationRequested)
@@ -314,7 +318,6 @@ namespace SysBot.AnimalCrossing
 
         private async Task<bool> IsOverworld(CancellationToken token)
         {
-            // Checks if player is in overworld (outside of a building).
             var x = BitConverter.ToUInt32(await Connection.ReadBytesAbsoluteAsync(CoordinateAddress + 0x1E, 0x4, token).ConfigureAwait(false), 0);
             return x == 0xC0066666;
         }
