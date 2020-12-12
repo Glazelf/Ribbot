@@ -10,7 +10,7 @@
       "SysBot.Base/1.0.0": {
         "dependencies": {
           "NETStandard.Library": "2.0.3",
-          "NLog": "4.7.3"
+          "NLog": "4.7.2"
         },
         "runtime": {
           "SysBot.Base.dll": {}
@@ -22,11 +22,11 @@
           "Microsoft.NETCore.Platforms": "1.1.0"
         }
       },
-      "NLog/4.7.3": {
+      "NLog/4.7.2": {
         "runtime": {
           "lib/netstandard2.0/NLog.dll": {
             "assemblyVersion": "4.0.0.0",
-            "fileVersion": "4.7.3.11982"
+            "fileVersion": "4.7.2.11786"
           }
         }
       }
@@ -52,12 +52,12 @@
       "path": "netstandard.library/2.0.3",
       "hashPath": "netstandard.library.2.0.3.nupkg.sha512"
     },
-    "NLog/4.7.3": {
+    "NLog/4.7.2": {
       "type": "package",
       "serviceable": true,
-      "sha512": "sha512-3pAikzwpKWki/ARyxp5tIKsSMgioyuDHuopPWorHBDUBt1vodh4zOOh5G7A3W09M3lC7TgiopjZZ18KePgIpMA==",
-      "path": "nlog/4.7.3",
-      "hashPath": "nlog.4.7.3.nupkg.sha512"
+      "sha512": "sha512-tfZNTOYr0TwvJNrXsJsVdZPSgIpYN1rXHnAZAadeaIbz+v18agNCCxgZXnXQqNKNizkogJ68zYTNKavyQFWwrg==",
+      "path": "nlog/4.7.2",
+      "hashPath": "nlog.4.7.2.nupkg.sha512"
     }
   }
 }
