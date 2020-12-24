@@ -1,11 +1,11 @@
 # SysBot.AnimalCrossing
 ![License](https://img.shields.io/badge/License-AGPLv3-blue.svg)
 
-## Support Discord:
+## Support Discords:
 
-For support on setting up your own instance of this SysBot.NET bot, feel free to join the discord! (Beware of un-official discords who claim to be official)
+For specific support for this fork of kwsch's SysBot.NET repo feel free to join! (No support will be provided in the official PKHeX Discord, please don't bother the devs)
 
-[<img src="https://canary.discordapp.com/api/guilds/401014193211441153/widget.png?style=banner2">](https://discord.gg/tDMvSRv)
+[<img src="https://canary.discordapp.com/api/guilds/549214833858576395/widget.png?style=banner2">](https://discord.gg/2gkybyu)
 
 [sys-botbase](https://github.com/olliz0r/sys-botbase) client for remote control automation of Nintendo Switch consoles.
 
