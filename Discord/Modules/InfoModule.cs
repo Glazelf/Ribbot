@@ -17,7 +17,7 @@ namespace SysBot.AnimalCrossing
     public class InfoModule : ModuleBase<SocketCommandContext>
     {
         private const string detail = "I am an open source Discord bot powered by SysBot.NET and other open source software.";
-        private const string repo = "https://github.com/kwsch/SysBot.AnimalCrossing";
+        private const string repo = "https://github.com/Glazelf/Ribbot";
 
         [Command("info")]
         [Alias("about", "whoami", "owner")]
@@ -36,8 +36,7 @@ namespace SysBot.AnimalCrossing
                 $"- {Format.Bold("Owner")}: {app.Owner} ({app.Owner.Id})\n" +
                 $"- {Format.Bold("Library")}: Discord.Net ({DiscordConfig.Version})\n" +
                 $"- {Format.Bold("Uptime")}: {GetUptime()}\n" +
-                $"- {Format.Bold("Runtime")}: {RuntimeInformation.FrameworkDescription} {RuntimeInformation.ProcessArchitecture} " +
-                $"({RuntimeInformation.OSDescription} {RuntimeInformation.OSArchitecture})\n" +
+                $"- {Format.Bold("Runtime")}: {RuntimeInformation.FrameworkDescription} {RuntimeInformation.ProcessArchitecture}\n" +
                 $"- {Format.Bold("Buildtime")}: {GetBuildTime()}\n"
             );
 
