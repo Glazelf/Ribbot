@@ -25,20 +25,21 @@ namespace CrossBot.SysBot
         protected override async Task MainLoop(CancellationToken token)
         {
             // Disconnect our virtual controller; will reconnect once we send a button command after a request.
-            LogUtil.LogInfo("Detatching controller on startup as first interaction.", Config.IP);
-            await Connection.SendAsync(SwitchCommand.DetachController(), token);
+            LogUtil.LogInfo("Detaching controller on startup as first interaction.", Config.IP);
+            await Connection.SendAsync(SwitchCommand.DetachController(), token).ConfigureAwait(false);
             await Task.Delay(200, token).ConfigureAwait(false);
 
             // Validate inventory offset.
             LogUtil.LogInfo("Checking inventory offset for validity.", Config.IP);
-            var (ofs, len) = InventoryValidator.GetOffsetLength(Config.Offset);
-            var inventory = await Connection.ReadBytesAsync(ofs, len, token).ConfigureAwait(false);
-
-            bool valid = InventoryValidator.ValidateItemBinary(inventory);
+            var valid = await GetIsPlayerInventoryValid(Config.Offset, token).ConfigureAwait(false);
             if (!valid)
             {
-                LogUtil.LogInfo($"Inventory read from {Config.Offset} does not appear to be valid. Exiting!", Config.IP);
-                return;
+                LogUtil.LogInfo($"Inventory read from {Config.Offset} (0x{Config.Offset:X8}) does not appear to be valid.", Config.IP);
+                if (Config.RequireValidInventoryMetadata)
+                {
+                    LogUtil.LogInfo("Exiting!", Config.IP);
+                    return;
+                }
             }
 
             LogUtil.LogInfo("Successfully connected to bot. Starting main loop!", Config.IP);
@@ -124,7 +125,7 @@ namespace CrossBot.SysBot
             // Inject item.
             var data = item.ToBytesClass();
             var poke = SwitchCommand.Poke(Config.Offset, data);
-            await Connection.SendAsync(poke, token);
+            await Connection.SendAsync(poke, token).ConfigureAwait(false);
             await Task.Delay(0_300, token).ConfigureAwait(false);
 
             // Open player inventory and open the currently selected item slot -- assumed to be the config offset.
@@ -158,7 +159,7 @@ namespace CrossBot.SysBot
             {
                 await Click(SwitchButton.Y, 2_000, token).ConfigureAwait(false);
                 var poke = SwitchCommand.Poke(Config.Offset, Item.NONE.ToBytes());
-                await Connection.SendAsync(poke, token);
+                await Connection.SendAsync(poke, token).ConfigureAwait(false);
                 await Task.Delay(1_000, token).ConfigureAwait(false);
             }
         }
