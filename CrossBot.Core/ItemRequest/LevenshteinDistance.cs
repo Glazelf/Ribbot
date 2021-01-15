@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace SysBot.AnimalCrossing
+namespace CrossBot.Core
 {
     public static class LevenshteinDistance
     {

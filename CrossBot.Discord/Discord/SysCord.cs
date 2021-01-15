@@ -2,18 +2,23 @@
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using CrossBot.SysBot;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
 using SysBot.Base;
 
-namespace SysBot.AnimalCrossing
+namespace CrossBot.Discord
 {
+    /// <summary>
+    /// Discord Bot that monitors the <see cref="Bot"/> state and updates its status accordingly.
+    /// </summary>
     public sealed class SysCord
     {
         private readonly DiscordSocketClient _client;
-        private readonly CrossBot Bot;
+        private readonly Bot Bot;
+        public readonly DiscordBotConfig Config;
         public ulong Owner = ulong.MaxValue;
 
         // Keep the CommandService and DI container around for use with commands.
@@ -21,9 +26,12 @@ namespace SysBot.AnimalCrossing
         private readonly CommandService _commands;
         private readonly IServiceProvider _services;
 
-        public SysCord(CrossBot bot)
+        public SysCord(Bot bot, DiscordBotConfig cfg)
         {
             Bot = bot;
+            Config = cfg;
+            Globals.Self = this;
+            Globals.Bot = bot;
             _client = new DiscordSocketClient(new DiscordSocketConfig
             {
                 // How much logging do you want to see?
@@ -108,7 +116,7 @@ namespace SysBot.AnimalCrossing
 
             await Task.Delay(5_000, token).ConfigureAwait(false);
 
-            var game = Bot.Config.Name;
+            var game = Config.Name;
             if (!string.IsNullOrWhiteSpace(game))
                 await _client.SetGameAsync(game).ConfigureAwait(false);
 
@@ -140,7 +148,7 @@ namespace SysBot.AnimalCrossing
 
             // Create a number to track where the prefix ends and the command begins
             int pos = 0;
-            if (msg.HasStringPrefix(Bot.Config.Prefix, ref pos))
+            if (msg.HasStringPrefix(Config.Prefix, ref pos))
             {
                 bool handled = await TryHandleCommandAsync(msg, pos).ConfigureAwait(false);
                 if (handled)
@@ -165,7 +173,7 @@ namespace SysBot.AnimalCrossing
             var context = new SocketCommandContext(_client, msg);
 
             // Check Permission
-            var mgr = Bot.Config;
+            var mgr = Config;
             if (!mgr.CanUseCommandUser(msg.Author.Id))
             {
                 await msg.Channel.SendMessageAsync("You are not permitted to use this command.").ConfigureAwait(false);

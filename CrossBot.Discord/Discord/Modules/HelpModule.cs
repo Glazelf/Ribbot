@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 
-namespace SysBot.AnimalCrossing
+namespace CrossBot.Discord
 {
     // ReSharper disable once UnusedType.Global
     public class HelpModule : ModuleBase<SocketCommandContext>
@@ -41,7 +41,7 @@ namespace SysBot.AnimalCrossing
                         continue;
                     if (cmd.Attributes.Any(z => z is RequireOwnerAttribute) && owner != uid)
                         continue;
-                    if (cmd.Attributes.Any(z => z is RequireSudoAttribute) && !Globals.Bot.Config.CanUseSudo(uid))
+                    if (cmd.Attributes.Any(z => z is RequireSudoAttribute) && !Globals.Self.Config.CanUseSudo(uid))
                         continue;
 
                     mentioned.Add(name);

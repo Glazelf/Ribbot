@@ -4,14 +4,14 @@ using System.Threading.Tasks;
 using Discord.Commands;
 using Discord.WebSocket;
 
-namespace SysBot.AnimalCrossing
+namespace CrossBot.Discord
 {
-    public static class Globals
-    {
-        public static SysCord Self { get; set; } = default!;
-        public static CrossBot Bot { get; set; } = default!;
-    }
-
+    /// <summary>
+    /// Attribute that requires the command issuer to have a certain assigned role.
+    /// </summary>
+    /// <remarks>
+    /// If the user has elevated permissions (sudo) or is the owner, the command will be permitted regardless of assigned role matching.
+    /// </remarks>
     public sealed class RequireQueueRoleAttribute : PreconditionAttribute
     {
         // Create a field to store the specified name
@@ -22,7 +22,7 @@ namespace SysBot.AnimalCrossing
 
         public override Task<PreconditionResult> CheckPermissionsAsync(ICommandContext context, CommandInfo command, IServiceProvider services)
         {
-            var mgr = Globals.Bot.Config;
+            var mgr = Globals.Self.Config;
             if (mgr.CanUseSudo(context.User.Id) || Globals.Self.Owner == context.User.Id)
                 return Task.FromResult(PreconditionResult.FromSuccess());
 
@@ -30,7 +30,7 @@ namespace SysBot.AnimalCrossing
             if (context.User is not SocketGuildUser gUser)
                 return Task.FromResult(PreconditionResult.FromError("You must be in a guild to run this command."));
 
-            if (!mgr.AcceptingCommands)
+            if (!Globals.Bot.Config.AcceptingCommands)
                 return Task.FromResult(PreconditionResult.FromError("Sorry, I am not currently accepting commands!"));
 
             bool hasRole = mgr.GetHasRole(_name, gUser.Roles.Select(z => z.Name));

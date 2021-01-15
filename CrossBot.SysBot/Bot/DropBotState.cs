@@ -1,4 +1,4 @@
-﻿namespace SysBot.AnimalCrossing
+﻿namespace CrossBot.SysBot
 {
     /// <summary>
     /// Tracks the state of the Drop Bot

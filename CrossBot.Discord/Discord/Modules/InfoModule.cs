@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 
-namespace SysBot.AnimalCrossing
+namespace CrossBot.Discord
 {
     // src: https://github.com/foxbot/patek/blob/master/src/Patek/Modules/InfoModule.cs
     // ISC License (ISC)

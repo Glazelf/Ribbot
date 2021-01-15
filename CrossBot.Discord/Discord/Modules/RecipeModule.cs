@@ -2,11 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using CrossBot.Core;
 using Discord;
 using Discord.Commands;
 using NHSE.Core;
 
-namespace SysBot.AnimalCrossing
+namespace CrossBot.Discord
 {
     // ReSharper disable once UnusedType.Global
     public class RecipeModule : ModuleBase<SocketCommandContext>
@@ -14,7 +15,7 @@ namespace SysBot.AnimalCrossing
         [Command("recipeLang")]
         [Alias("rl")]
         [Summary("Gets a list of DIY recipe IDs that contain the requested Item Name string.")]
-        [RequireQueueRole(nameof(Globals.Bot.Config.RoleUseBot))]
+        [RequireQueueRole(nameof(Globals.Self.Config.RoleUseBot))]
         public async Task SearchItemsAsync([Summary("Language code to search with")] string language, [Summary("Item name / item substring")][Remainder] string itemName)
         {
             var strings = GameInfo.GetStrings(language).ItemDataSource;
@@ -24,7 +25,7 @@ namespace SysBot.AnimalCrossing
         [Command("recipe")]
         [Alias("ri", "searchDIY")]
         [Summary("Gets a list of DIY recipe IDs that contain the requested Item Name string.")]
-        [RequireQueueRole(nameof(Globals.Bot.Config.RoleUseBot))]
+        [RequireQueueRole(nameof(Globals.Self.Config.RoleUseBot))]
         public async Task SearchItemsAsync([Summary("Item name / item substring")][Remainder] string itemName)
         {
             var strings = GameInfo.Strings.ItemDataSource;
@@ -45,7 +46,7 @@ namespace SysBot.AnimalCrossing
                 if (!string.Equals(item.Text, itemName, StringComparison.OrdinalIgnoreCase))
                     continue;
 
-                if (!DropUtil.InvertedRecipeDictionary.TryGetValue((ushort) item.Value, out var recipeID))
+                if (!ItemRequestUtil.InvertedRecipeDictionary.TryGetValue((ushort) item.Value, out var recipeID))
                 {
                     await ReplyAsync("Requested item is not a DIY recipe.").ConfigureAwait(false);
                     return;
@@ -60,7 +61,7 @@ namespace SysBot.AnimalCrossing
             var matches = new List<string>();
             foreach (var item in items)
             {
-                if (!DropUtil.InvertedRecipeDictionary.TryGetValue((ushort) item.Value, out var recipeID))
+                if (!ItemRequestUtil.InvertedRecipeDictionary.TryGetValue((ushort) item.Value, out var recipeID))
                     continue;
 
                 var msg = $"{item.Value:X4} {item.Text}: Recipe {recipeID:X3}";

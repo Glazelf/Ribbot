@@ -1,8 +1,12 @@
 ﻿using System;
+using CrossBot.Core;
 using NHSE.Core;
 
-namespace SysBot.AnimalCrossing
+namespace CrossBot.SysBot
 {
+    /// <summary>
+    /// Configuration for the <see cref="Bot"/> related to dropping items.
+    /// </summary>
     [Serializable]
     public class DropBotConfig : IConfigItem
     {

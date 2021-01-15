@@ -1,18 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using SysBot.Base;
 
-namespace SysBot.AnimalCrossing
+namespace CrossBot.Discord
 {
-    [Serializable]
-    public sealed class CrossBotConfig : SwitchBotConfig
+    public class DiscordBotConfig
     {
-        #region Discord
-
-        /// <summary> When enabled, the bot will accept commands from users via Discord. </summary>
-        public bool AcceptingCommands { get; set; } = true;
-
         /// <summary> Custom Discord Status for playing a game. </summary>
         public string Name { get; set; } = "CrossBot";
 
@@ -30,23 +23,6 @@ namespace SysBot.AnimalCrossing
         public List<ulong> Users { get; set; } = new();
         public List<ulong> Sudo { get; set; } = new();
 
-        #endregion
-
-        #region Features
-
-        /// <summary> Skips creating bots when the program is started; helpful for testing integrations. </summary>
-        public bool SkipConsoleBotCreation { get; set; }
-
-        /// <summary> Offset the items are injected at. This should be the player inventory slot you have currently selected in-game. </summary>
-        public uint Offset { get; set; } = 0xABADD888;
-
-        public DropBotConfig DropConfig { get; set; } = new();
-
-        /// <summary> When enabled, users in Discord can request the bot to pick up items (spamming Y a <see cref="DropBotConfig.PickupCount"/> times). </summary>
-        public bool AllowClean { get; set; }
-
-        #endregion
-        
         public bool CanUseCommandUser(ulong authorId) => Users.Count == 0 || Users.Contains(authorId);
         public bool CanUseCommandChannel(ulong channelId) => Channels.Count == 0 || Channels.Contains(channelId);
         public bool CanUseSudo(ulong userId) => Sudo.Contains(userId);

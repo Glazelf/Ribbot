@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using Discord.Commands;
 using SysBot.Base;
 
-namespace SysBot.AnimalCrossing
+namespace CrossBot.Discord
 {
     // ReSharper disable once UnusedType.Global
     public class ControlModule : ModuleBase<SocketCommandContext>
