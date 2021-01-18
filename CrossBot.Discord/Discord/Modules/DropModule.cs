@@ -17,6 +17,12 @@ namespace CrossBot.Discord
         [RequireQueueRole(nameof(Globals.Self.Config.RoleUseBot))]
         public async Task RequestCleanAsync()
         {
+            var bot = Globals.Bot;
+            if (bot.Config.DropConfig.RequireJoin && bot.Island.GetVisitor(Context.User.Id) == null && !Globals.Self.Config.CanUseSudo(Context.User.Id))
+            {
+                await ReplyAsync($"You must `{IslandModule.cmdJoin}` the island before using this command.").ConfigureAwait(false);
+                return;
+            }
             if (!Globals.Bot.Config.AllowClean)
             {
                 await ReplyAsync("Clean functionality is currently disabled.").ConfigureAwait(false);
@@ -24,29 +30,6 @@ namespace CrossBot.Discord
             }
             Globals.Bot.CleanRequested = true;
             await ReplyAsync("A clean request will be executed momentarily.").ConfigureAwait(false);
-        }
-
-        [Command("validate")]
-        [Summary("Validates the bot inventory offset again.")]
-        [RequireQueueRole(nameof(Globals.Self.Config.RoleUseBot))]
-        public async Task RequestValidateAsync()
-        {
-            if (!Globals.Bot.Config.AllowValidate)
-            {
-                await ReplyAsync("Validate functionality is currently disabled.").ConfigureAwait(false);
-                return;
-            }
-            Globals.Bot.ValidateRequested = true;
-            await ReplyAsync("A validate request will be executed momentarily. Check the logs for the result.").ConfigureAwait(false);
-        }
-
-        [Command("code")]
-        [Alias("dodo")]
-        [Summary("Prints the Dodo Code for the island.")]
-        [RequireQueueRole(nameof(Globals.Self.Config.RoleUseBot))]
-        public async Task RequestDodoCodeAsync()
-        {
-            await ReplyAsync($"Dodo Code: {Globals.Bot.DodoCode}.").ConfigureAwait(false);
         }
 
         private const string DropItemSummary =
@@ -60,6 +43,12 @@ namespace CrossBot.Discord
         [RequireQueueRole(nameof(Globals.Self.Config.RoleUseBot))]
         public async Task RequestDropAsync([Summary(DropItemSummary)][Remainder]string request)
         {
+            var bot = Globals.Bot;
+            if (bot.Config.DropConfig.RequireJoin && bot.Island.GetVisitor(Context.User.Id) == null && !Globals.Self.Config.CanUseSudo(Context.User.Id))
+            {
+                await ReplyAsync($"You must `{IslandModule.cmdJoin}` the island before using this command.").ConfigureAwait(false);
+                return;
+            }
             var cfg = Globals.Bot.Config;
             var items = ItemParser.GetItemsFromUserInput(request, cfg.DropConfig);
             await DropItems(items).ConfigureAwait(false);
@@ -76,6 +65,12 @@ namespace CrossBot.Discord
         [RequireQueueRole(nameof(Globals.Self.Config.RoleUseBot))]
         public async Task RequestDropDIYAsync([Summary(DropDIYSummary)][Remainder]string recipeIDs)
         {
+            var bot = Globals.Bot;
+            if (bot.Config.DropConfig.RequireJoin && bot.Island.GetVisitor(Context.User.Id) == null && !Globals.Self.Config.CanUseSudo(Context.User.Id))
+            {
+                await ReplyAsync($"You must `{IslandModule.cmdJoin}` the island before using this command.").ConfigureAwait(false);
+                return;
+            }
             var items = ItemParser.GetDIYsFromUserInput(recipeIDs);
             await DropItems(items).ConfigureAwait(false);
         }
@@ -91,7 +86,7 @@ namespace CrossBot.Discord
 
             var user = Context.User;
             var requestInfo = new ItemRequest(user.Username, user.Id, items);
-            Globals.Bot.Injections.Enqueue(requestInfo);
+            Globals.Bot.DropState.Injections.Enqueue(requestInfo);
 
             var msg = $"Item drop request{(requestInfo.Items.Count > 1 ? "s" : string.Empty)} will be executed momentarily.";
             await ReplyAsync(msg).ConfigureAwait(false);
