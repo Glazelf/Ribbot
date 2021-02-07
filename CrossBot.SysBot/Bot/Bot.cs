@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
 using CrossBot.Core;
 using NHSE.Core;
@@ -12,97 +11,98 @@ namespace CrossBot.SysBot
     /// </summary>
     public sealed class Bot : SwitchRoutineExecutor<BotConfig>
     {
-        public bool CleanRequested { private get; set; }
-        public bool ValidateRequested { private get; set; }
         public readonly IslandState Island = new();
 
         public Bot(BotConfig cfg) : base(cfg)
         {
             DropState = new DropBotState(cfg.DropConfig);
             FieldItemState = new FieldItemState(cfg.FieldItemConfig);
+            ViewState = new AdvancedViewState(this);
+            VillagerState = new VillagerState(this, cfg.VillagerConfig);
         }
 
         public readonly DropBotState DropState;
         public readonly FieldItemState FieldItemState;
+        public readonly AdvancedViewState ViewState;
+        public readonly VillagerState VillagerState;
 
         public override void SoftStop() => Config.AcceptingCommands = false;
 
         public override async Task MainLoop(CancellationToken token)
         {
-            // Validate our config.
-            var coord = Config.FieldItemConfig.ValidateCoordinates();
-            if (coord != CoordinateResult.Valid)
+            if (!await BotStartup.ValidateStartup(this, token).ConfigureAwait(false))
             {
-                Log($"Coordinates are not valid! {coord}. Exiting!");
+                Log("Exiting!");
                 return;
-            }
-
-            // Disconnect our virtual controller; will reconnect once we send a button command after a request.
-            Log("Detaching controller on startup as first interaction.");
-            await Connection.SendAsync(SwitchCommand.DetachController(UseCRLF), token).ConfigureAwait(false);
-            await Task.Delay(200, token).ConfigureAwait(false);
-
-            // Validate inventory offset.
-            Log("Checking inventory offset for validity.");
-            var valid = await GetIsPlayerInventoryValid(Config.Offset, token).ConfigureAwait(false);
-            if (!valid)
-            {
-                Log($"Inventory read from {Config.Offset} (0x{Config.Offset:X8}) does not appear to be valid.");
-                if (Config.RequireValidInventoryMetadata)
-                {
-                    Log("Exiting!");
-                    return;
-                }
             }
 
             Log("Successfully connected to bot. Starting main loop!");
             while (!token.IsCancellationRequested)
-                await DropLoop(token).ConfigureAwait(false);
+            {
+                var result = await DropLoop(token).ConfigureAwait(false);
+                if (result)
+                    continue;
+                Log("Exiting!");
+                break;
+            }
         }
 
-        private async Task DropLoop(CancellationToken token)
+        private async Task<bool> DropLoop(CancellationToken token)
         {
-            if (ValidateRequested)
+            // Check if our session is still active.
+            if (!Config.ViewConfig.SkipSessionCheck && !await ViewState.IsLinkSessionActive(token).ConfigureAwait(false))
+            {
+                Log("Link Session appears to have ended. Attempting to re-open gates.");
+                if (!await ViewState.StartupOpenGates(this, token).ConfigureAwait(false))
+                {
+                    Log("Opening gates has failed. Stopping bot loop.");
+                    return false;
+                }
+
+                if (!await ViewState.StartupGetDodoCode(this, token).ConfigureAwait(false))
+                {
+                    Log("Unable to retrieve new dodo code. Stopping bot loop.");
+                    return false;
+                }
+            }
+
+            if (DropState.ValidateRequested)
             {
                 Log("Checking inventory offset for validity.");
-                var valid = await GetIsPlayerInventoryValid(Config.Offset, token).ConfigureAwait(false);
+                var valid = await GetIsPlayerInventoryValid(Config.InventoryOffset, token).ConfigureAwait(false);
                 if (!valid)
                 {
-                    Connection.LogError($"Inventory read from {Config.Offset} (0x{Config.Offset:X8}) does not appear to be valid.");
+                    Connection.LogError($"Inventory read from {Config.InventoryOffset} (0x{Config.InventoryOffset:X8}) does not appear to be valid.");
                     if (Config.RequireValidInventoryMetadata)
                     {
                         Connection.LogError("Turning off command processing!");
                         Config.AcceptingCommands = false;
                     }
                 }
-                ValidateRequested = false;
+                DropState.ValidateRequested = false;
             }
 
             if (!Config.AcceptingCommands)
             {
                 await Task.Delay(1_000, token).ConfigureAwait(false);
-                return;
+                return true;
             }
 
             if (DropState.Injections.TryDequeue(out var item))
             {
                 var count = await DropItems(item, token).ConfigureAwait(false);
-                DropState.AfterDrop(count);
+                item.Injected = count == item.Items.Count;
+                Log($"Dropped {count}/{item.Items.Count} items for {item.User} ({item.UserID}).");
+                DropState.AfterDrop(item, count);
             }
-            else if ((DropState.CleanRequired && DropState.Config.AutoClean) || CleanRequested)
+            else if ((DropState.CleanRequired && DropState.Config.AutoClean) || DropState.CleanRequested)
             {
                 await CleanUp(DropState.Config.PickupCount, token).ConfigureAwait(false);
                 DropState.AfterClean();
-                CleanRequested = false;
             }
             else if (FieldItemState.FullRefreshRequired)
             {
-                var ofs = FieldItemState.Config.FieldItemOffset;
-                if (!GetIsFieldItemOffsetValid(ofs))
-                {
-                    Log("Bad Field Item offset detected. Please configure it -- there is no validation!");
-                }
-                else
+                const uint ofs = Offsets.FieldItemStart;
                 {
                     var payload = FieldItemState.FieldItemLayer;
                     Log($"Writing Field Item Layer to 0x{ofs:X8}, size 0x{payload.Length:X} bytes.");
@@ -110,27 +110,32 @@ namespace CrossBot.SysBot
                 }
                 FieldItemState.AfterFullRefresh();
             }
-            else if (FieldItemState.Injections.TryDequeue(out var itemSet))
+            else if (FieldItemState.Injections.TryDequeue(out var fieldSpawn))
             {
-                var ofs = FieldItemState.Config.FieldItemOffset;
-                if (!GetIsFieldItemOffsetValid(ofs))
-                    Log("Bad Field Item offset detected. Please configure it -- there is no validation!");
-                else
-                    await InjectDroppedItems(itemSet, ofs, token).ConfigureAwait(false);
+                const uint ofs = Offsets.FieldItemStart;
+                {
+                    await InjectDroppedItems(fieldSpawn, ofs, token).ConfigureAwait(false);
+                    Log($"Dropped {fieldSpawn.Items.Count} items for {fieldSpawn.User} ({fieldSpawn.UserID}).");
+                    fieldSpawn.Injected = true;
+                }
+                FieldItemState.AfterSpawn(fieldSpawn);
+            }
+            else if (VillagerState.Injections.TryDequeue(out var villagerInject))
+            {
+                await VillagerState.InjectVillager(villagerInject, token).ConfigureAwait(false);
             }
             else
             {
                 DropState.StillIdle();
                 await Task.Delay(1_000, token).ConfigureAwait(false);
             }
+
+            return true;
         }
 
-        private static bool GetIsFieldItemOffsetValid(in uint ofs)
-        {
-            return ofs > 100; // no validation besides checking if they configured something... lol
-        }
+        #region Player Inventory
 
-        private async Task<bool> GetIsPlayerInventoryValid(uint playerOfs, CancellationToken token)
+        public async Task<bool> GetIsPlayerInventoryValid(uint playerOfs, CancellationToken token)
         {
             PlayerItemSet.GetOffsetLength(playerOfs, out var ofs, out var len);
             var inventory = await Connection.ReadBytesAsync(ofs, len, token).ConfigureAwait(false);
@@ -138,7 +143,7 @@ namespace CrossBot.SysBot
             return PlayerItemSet.ValidateItemBinary(inventory);
         }
 
-        private async Task<int> DropItems(ItemRequest drop, CancellationToken token)
+        private async Task<int> DropItems(DropRequest drop, CancellationToken token)
         {
             int dropped = 0;
             bool first = true;
@@ -165,7 +170,7 @@ namespace CrossBot.SysBot
 
             // Inject item.
             var data = item.ToBytesClass();
-            var poke = SwitchCommand.Poke(Config.Offset, data, UseCRLF);
+            var poke = SwitchCommand.Poke(Config.InventoryOffset, data, UseCRLF);
             await Connection.SendAsync(poke, token).ConfigureAwait(false);
             await Task.Delay(0_300, token).ConfigureAwait(false);
 
@@ -199,19 +204,25 @@ namespace CrossBot.SysBot
             for (int i = 0; i < count; i++)
             {
                 await Click(SwitchButton.Y, 2_000, token).ConfigureAwait(false);
-                var poke = SwitchCommand.Poke(Config.Offset, Item.NONE.ToBytes(), UseCRLF);
+                var poke = SwitchCommand.Poke(Config.InventoryOffset, Item.NONE.ToBytes(), UseCRLF);
                 await Connection.SendAsync(poke, token).ConfigureAwait(false);
                 await Task.Delay(1_000, token).ConfigureAwait(false);
             }
         }
 
-        private async Task InjectDroppedItems(IReadOnlyList<FieldItemColumn> itemSet, uint fiOffset, CancellationToken token)
+        #endregion
+
+        #region Field Item
+
+        private async Task InjectDroppedItems(SpawnRequest itemSet, uint fiOffset, CancellationToken token)
         {
-            foreach (var column in itemSet)
+            foreach (var column in itemSet.Items)
             {
                 await Connection.WriteBytesAsync(column.Data, fiOffset + (uint)column.Offset, token).ConfigureAwait(false);
                 Log($"Wrote {column.Data.Length / Item.SIZE} tiles to field item map @ ({column.X},{column.Y}).");
             }
         }
+
+        #endregion
     }
 }

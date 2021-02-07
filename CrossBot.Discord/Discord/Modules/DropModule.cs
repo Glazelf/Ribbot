@@ -28,7 +28,7 @@ namespace CrossBot.Discord
                 await ReplyAsync("Clean functionality is currently disabled.").ConfigureAwait(false);
                 return;
             }
-            Globals.Bot.CleanRequested = true;
+            Globals.Bot.DropState.CleanRequested = true;
             await ReplyAsync("A clean request will be executed momentarily.").ConfigureAwait(false);
         }
 
@@ -36,6 +36,37 @@ namespace CrossBot.Discord
             "Requests the bot drop an item with the user's provided input. " +
             "Hex Mode: Item IDs (in hex); request multiple by putting spaces between items. " +
             "Text Mode: Item names; request multiple by putting commas between items. To parse for another language, include the language code first and a comma, followed by the items.";
+
+        [Command("dropItem")]
+        [Alias("drop")]
+        [Summary("Drops a custom item (or items) from an NHI file.")]
+        [RequireQueueRole(nameof(Globals.Self.Config.RoleUseBot))]
+        public async Task RequestDropAsync()
+        {
+            var bot = Globals.Bot;
+            if (bot.Config.RequireJoin && bot.Island.GetVisitor(Context.User.Id) == null && !Globals.Self.Config.CanUseSudo(Context.User.Id))
+            {
+                await ReplyAsync($"You must `{IslandModule.cmdJoin}` the island before using this command.").ConfigureAwait(false);
+                return;
+            }
+
+            if (Context.Message.Attachments.Count == 0)
+            {
+                await ReplyAsync("No items requested; silly goose. Attach an `nhi` file next time, or request specific items.").ConfigureAwait(false);
+                return;
+            }
+
+            var att1 = Context.Message.Attachments.ElementAt(0);
+            var max = Globals.Bot.Config.DropConfig.MaxDropCount;
+            var (code, items) = await DiscordUtil.TryDownloadItems(att1, max).ConfigureAwait(false);
+            if (code != DownloadResult.Success)
+            {
+                var msg = DiscordUtil.GetItemErrorMessage(code, max);
+                await ReplyAsync(msg).ConfigureAwait(false);
+                return;
+            }
+            await DropItems(items).ConfigureAwait(false);
+        }
 
         [Command("dropItem")]
         [Alias("drop")]
@@ -49,7 +80,8 @@ namespace CrossBot.Discord
                 await ReplyAsync($"You must `{IslandModule.cmdJoin}` the island before using this command.").ConfigureAwait(false);
                 return;
             }
-            var cfg = Globals.Bot.Config;
+
+            var cfg = bot.Config;
             var items = ItemParser.GetItemsFromUserInput(request, cfg.DropConfig);
             await DropItems(items).ConfigureAwait(false);
         }
@@ -85,10 +117,20 @@ namespace CrossBot.Discord
             }
 
             var user = Context.User;
-            var requestInfo = new ItemRequest(user.Username, user.Id, items);
+            var mention = Context.User.Mention;
+            var requestInfo = new DropRequest(user.Username, user.Id, items)
+            {
+                OnFinish = success =>
+                {
+                    var reply = success
+                        ? "Items have been dropped by the bot. Please pick them up!"
+                        : "Failed to inject items. Please tell the bot owner to look at the logs!";
+                    Task.Run(async () => await ReplyAsync($"{mention}: {reply}").ConfigureAwait(false));
+                }
+            };
             Globals.Bot.DropState.Injections.Enqueue(requestInfo);
 
-            var msg = $"Item drop request{(requestInfo.Items.Count > 1 ? "s" : string.Empty)} will be executed momentarily.";
+            var msg = $"{mention}: Item drop request{(requestInfo.Items.Count > 1 ? "s" : string.Empty)} have been added to the queue and will be dropped momentarily.";
             await ReplyAsync(msg).ConfigureAwait(false);
         }
     }

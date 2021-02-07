@@ -8,17 +8,21 @@ namespace CrossBot.SysBot
     /// </summary>
     public class DropBotState
     {
-        public readonly ConcurrentQueue<ItemRequest> Injections = new();
+        public readonly ConcurrentQueue<DropRequest> Injections = new();
         public DropBotState(DropBotConfig cfg) => Config = cfg;
 
         public readonly DropBotConfig Config;
         private int DropCount;
         private int IdleCount;
 
+        public bool CleanRequested;
+        public bool ValidateRequested;
+
         public bool CleanRequired => DropCount != 0 && IdleCount > Config.NoActivitySeconds;
 
-        public void AfterDrop(int count)
+        public void AfterDrop(DropRequest dropRequest, int count)
         {
+            dropRequest.NotifyFinished();
             DropCount += count;
             IdleCount = 0;
         }
