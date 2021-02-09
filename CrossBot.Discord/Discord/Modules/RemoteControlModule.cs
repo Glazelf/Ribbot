@@ -36,7 +36,7 @@ namespace SysBot.Pokemon.Discord
         {
             var b = Globals.Bot;
             await b.Connection.SendAsync(SwitchCommand.Click(button, b.UseCRLF), CancellationToken.None).ConfigureAwait(false);
-            await ReplyAsync($"{b.Connection.Name} has performed: {button}").ConfigureAwait(false);
+            await ReplyAsync($"Input `{button}` has been performed.").ConfigureAwait(false);
         }
 
         private async Task SetStickAsyncImpl(SwitchStick s, short x, short y, ushort ms)
@@ -49,10 +49,10 @@ namespace SysBot.Pokemon.Discord
 
             var b = Bot;
             await b.Connection.SendAsync(SwitchCommand.SetStick(s, x, y, b.UseCRLF), CancellationToken.None).ConfigureAwait(false);
-            await ReplyAsync($"{b.Connection.Name} has performed: {s}").ConfigureAwait(false);
+            await ReplyAsync($"Stick has been set to `{s}`.").ConfigureAwait(false);
             await Task.Delay(ms).ConfigureAwait(false);
             await b.Connection.SendAsync(SwitchCommand.ResetStick(s, b.UseCRLF), CancellationToken.None).ConfigureAwait(false);
-            await ReplyAsync($"{b.Connection.Name} has reset the stick position.").ConfigureAwait(false);
+            await ReplyAsync("Stick position has been reset.").ConfigureAwait(false);
         }
 
         [Command("readMemory")]
