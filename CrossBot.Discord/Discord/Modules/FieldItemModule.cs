@@ -53,7 +53,7 @@ namespace CrossBot.Discord
                 return;
             }
             var cfg = Globals.Bot.Config;
-            var items = ItemParser.GetItemsFromUserInput(request, cfg.DropConfig);
+            var items = ItemParser.GetItemsFromUserInput(request, cfg.DropConfig, ItemDestination.FieldItemDropped);
             await SpawnItems(items.ToArray()).ConfigureAwait(false);
         }
 
@@ -82,7 +82,7 @@ namespace CrossBot.Discord
 
             var column = FieldItemDropper.InjectItemsAsDropped(x, y, items, height);
             var mention = Context.User.Mention;
-            var request = new SpawnRequest(Context.User.Username, Context.User.Id, column)
+            var request = new SpawnRequest(Context.User.Username, Context.User.Id, column, items)
             {
                 OnFinish = success =>
                 {
