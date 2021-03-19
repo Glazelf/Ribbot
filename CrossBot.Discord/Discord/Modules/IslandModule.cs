@@ -15,7 +15,12 @@ namespace CrossBot.Discord
         [RequireQueueRole(nameof(Globals.Self.Config.RoleUseBot))]
         public async Task RequestDodoCodeAsync()
         {
-            await ReplyAsync($"Dodo Code: {Globals.Bot.Island.DodoCode}.").ConfigureAwait(false);
+            string DodoReply = $"Dodo Code: {Globals.Bot.Island.DodoCode}.";
+            if(Globals.Bot.Island.Count >= Globals.Bot.Config.MaxVisitorCount)
+            {
+                DodoReply = $"{DodoReply}\n**Warning**: There are already {Globals.Bot.Island.Count} visitors. You will have to wait for someone to leave before you can use the bot.";
+            }
+            await ReplyAsync(DodoReply).ConfigureAwait(false);
         }
 
         [Command("visitorCount")] [Alias("count", "cv", "vc")]
