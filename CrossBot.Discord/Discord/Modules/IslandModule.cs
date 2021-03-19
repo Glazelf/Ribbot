@@ -18,7 +18,7 @@ namespace CrossBot.Discord
             string DodoReply = $"Dodo Code: {Globals.Bot.Island.DodoCode}.";
             if(Globals.Bot.Island.Count >= Globals.Bot.Config.MaxVisitorCount)
             {
-                DodoReply = $"{DodoReply}\n**Warning**: There are already {Globals.Bot.Island.Count} visitors. You will have to wait for someone to leave before you can use the bot.";
+                DodoReply +=  $"\n**Warning**: There are already {Globals.Bot.Island.Count} visitors. You will have to wait for someone to leave before you can use the bot.";
             }
             await ReplyAsync(DodoReply).ConfigureAwait(false);
         }
