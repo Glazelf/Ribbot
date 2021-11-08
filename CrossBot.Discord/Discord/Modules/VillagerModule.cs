@@ -16,7 +16,7 @@ namespace CrossBot.Discord
         private static SlotTracker Tracker => Globals.Bot.VillagerState.Tracker;
         private static VillagerConfig Config => Globals.Bot.Config.VillagerConfig;
 
-        [Command("injectVillager"), Alias("iv")]
+        [Command("injectVillager"), Alias("iv", "villagerInject", "vi")]
         [Summary("Injects a villager based on the internal name.")]
         [RequireQueueRole(nameof(Globals.Self.Config.RoleUseBot))]
         public async Task InjectVillagerAsync(string internalName)
@@ -36,7 +36,7 @@ namespace CrossBot.Discord
         }
 
         [RequireSudo]
-        [Command("injectVillager"), Alias("iv")]
+        [Command("injectVillager"), Alias("iv", "villagerInject", "vi")]
         [Summary("Injects a villager based on the internal name.")]
         public async Task InjectVillagerAsync(string internalName, int slot)
         {
@@ -114,7 +114,7 @@ namespace CrossBot.Discord
         }
 
         [Command("villagerName")]
-        [Alias("vn", "nv", "name")]
+        [Alias("vn", "nv", "name", "lookupVillager", "lv")]
         [Summary("Gets the internal name of a villager.")]
         [RequireQueueRole(nameof(Globals.Self.Config.RoleUseBot))]
         public async Task GetVillagerInternalNameAsync([Summary("Villager name")][Remainder] string villagerName)

@@ -12,7 +12,7 @@ namespace CrossBot.Discord
     public class RecipeModule : ModuleBase<SocketCommandContext>
     {
         [Command("recipeLang")]
-        [Alias("rl")]
+        [Alias("rl", "lookupDIYLang", "ldl", "lookupLangDIY", "lld")]
         [Summary("Gets a list of DIY recipe IDs that contain the requested Item Name string.")]
         [RequireQueueRole(nameof(Globals.Self.Config.RoleUseBot))]
         public async Task SearchItemsAsync([Summary("Language code to search with")] string language, [Summary("Item name / item substring")][Remainder] string itemName)
@@ -22,7 +22,7 @@ namespace CrossBot.Discord
         }
 
         [Command("recipe")]
-        [Alias("ri", "searchDIY")]
+        [Alias("ri", "searchDIY", "lookupDIY")]
         [Summary("Gets a list of DIY recipe IDs that contain the requested Item Name string.")]
         [RequireQueueRole(nameof(Globals.Self.Config.RoleUseBot))]
         public async Task SearchItemsAsync([Summary("Item name / item substring")][Remainder] string itemName)

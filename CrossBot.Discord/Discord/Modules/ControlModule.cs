@@ -19,6 +19,7 @@ namespace CrossBot.Discord
         }
 
         [Command("setCode")]
+        [Alias("setDodo")]
         [Summary("Sets a string to the Dodo Code property for users to call via the associated command.")]
         [RequireSudo]
         public async Task SetDodoCodeAsync([Summary("Current Dodo Code for the island.")][Remainder]string code)
